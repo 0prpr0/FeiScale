@@ -2,38 +2,59 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FeiScale - 身体数据监控</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FeiScale - 身体数据看板</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <style>
-        :root { --primary: #3b82f6; --accent: #10b981; --bg: #f8fafc; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 15px; display: flex; flex-direction: column; align-items: center; }
-        .container { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); width: 100%; max-width: 600px; box-sizing: border-box; }
-        header { text-align: center; margin-bottom: 20px; }
-        h1 { margin: 0; font-size: 1.5rem; color: #1e293b; letter-spacing: -0.5px; }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .stat-card { background: #f1f5f9; padding: 10px; border-radius: 12px; text-align: center; }
-        .stat-label { font-size: 0.75rem; color: #64748b; margin-bottom: 4px; }
-        .stat-value { font-weight: bold; font-size: 1.1rem; color: var(--primary); }
-        .input-area { margin-top: 25px; display: flex; gap: 8px; flex-wrap: wrap; border-top: 1px solid #e2e8f0; padding-top: 20px; }
-        input { flex: 1; min-width: 120px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
-        button { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
-        button:active { opacity: 0.8; }
-        .footer-tips { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 15px; }
+        :root { --primary: #6366f1; --accent: #10b981; --loss: #f43f5e; }
+        body { 
+            background: linear-gradient(135deg, #e0e7ff 0%, #f1f5f9 100%); 
+            margin: 0; padding: 20px; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center; font-family: -apple-system, system-ui, sans-serif;
+        }
+        #capture-area {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 24px; padding: 25px;
+            width: 100%; max-width: 500px; box-sizing: border-box;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05);
+        }
+        header { text-align: center; margin-bottom: 25px; }
+        h1 { margin: 0; font-size: 1.8rem; color: #1e293b; letter-spacing: -1px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 25px; }
+        .stat-card { background: white; padding: 12px; border-radius: 16px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .stat-label { font-size: 0.7rem; color: #64748b; margin-bottom: 4px; text-transform: uppercase; }
+        .stat-value { font-weight: 800; font-size: 1.2rem; color: var(--primary); }
+        
+        .input-area { margin-top: 25px; display: flex; gap: 10px; flex-wrap: wrap; }
+        input { 
+            flex: 1; min-width: 130px; padding: 12px; border: 1px solid #e2e8f0; 
+            border-radius: 12px; font-size: 16px; outline: none; transition: border 0.2s;
+        }
+        input:focus { border-color: var(--primary); }
+        .btn { 
+            padding: 12px 20px; border-radius: 12px; font-weight: 600; 
+            cursor: pointer; border: none; transition: transform 0.1s;
+        }
+        .btn-primary { background: var(--primary); color: white; flex-grow: 1; }
+        .btn-outline { background: white; color: var(--primary); border: 1px solid var(--primary); margin-top: 10px; width: 100%; }
+        .btn:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div id="capture-area">
     <header>
         <h1>FeiScale</h1>
-        <p style="font-size: 12px; color: #64748b; margin-top: 5px;">身高: 1.81m</p>
+        <p style="font-size: 12px; color: #64748b; margin-top: 5px;">个人体重 & BMI 趋势图</p>
     </header>
 
     <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">最新体重</div><div id="curW" class="stat-value">--</div></div>
-        <div class="stat-card"><div class="stat-label">最新 BMI</div><div id="curBMI" class="stat-value" style="color:var(--accent)">--</div></div>
-        <div class="stat-card"><div class="stat-label">总减重</div><div id="totalLoss" class="stat-value" style="color:#ef4444">--</div></div>
+        <div class="stat-card"><div class="stat-label">当前体重</div><div id="curW" class="stat-value">--</div></div>
+        <div class="stat-card"><div class="stat-label">当前 BMI</div><div id="curBMI" class="stat-value" style="color:var(--accent)">--</div></div>
+        <div class="stat-card"><div class="stat-label">累计减重</div><div id="totalLoss" class="stat-value" style="color:var(--loss)">--</div></div>
     </div>
 
     <canvas id="mainChart"></canvas>
@@ -41,10 +62,10 @@
     <div class="input-area">
         <input type="date" id="newDate">
         <input type="number" id="newWeight" step="0.01" placeholder="体重 (kg)">
-        <button onclick="addRecord()">记录/更新</button>
+        <button class="btn btn-primary" onclick="addRecord()">更新数据</button>
     </div>
     
-    <div class="footer-tips">同一天的记录会直接覆盖更新</div>
+    <button class="btn btn-outline" onclick="saveImage()">保存成果长图</button>
 </div>
 
 <script>
@@ -86,63 +107,55 @@
                 labels: myRecords.map(r => r.date.slice(5)),
                 datasets: [
                     {
-                        label: '体重 (kg)',
+                        label: '体重',
                         data: myRecords.map(r => r.weight),
-                        borderColor: '#3b82f6',
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                        borderWidth: 3,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        borderWidth: 4,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#6366f1',
+                        pointRadius: 4,
                         yAxisID: 'y',
-                        tension: 0.3,
+                        tension: 0.4,
                         fill: true
-                    },
-                    {
-                        label: 'BMI',
-                        data: myRecords.map(r => calcBMI(r.weight)),
-                        borderColor: '#10b981',
-                        borderDash: [5, 5],
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        yAxisID: 'y1',
-                        tension: 0.3,
-                        fill: false
                     }
                 ]
             },
             options: {
                 responsive: true,
-                interaction: { mode: 'index', intersect: false },
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { type: 'linear', position: 'left', title: { display: true, text: '体重 (kg)', font: { size: 10 } } },
-                    y1: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'BMI', font: { size: 10 } } }
+                    y: { type: 'linear', display: true, position: 'left', grid: { color: '#f1f5f9' } },
+                    x: { grid: { display: false } }
                 }
             }
         });
     }
 
-    // 核心逻辑修改：查找现有记录并覆盖
     function addRecord() {
         const date = document.getElementById('newDate').value;
         const weight = parseFloat(document.getElementById('newWeight').value);
-        if(!date || !weight) return alert('请正确输入');
-
-        // 查找是否已经存在该日期的索引
-        const existingIndex = myRecords.findIndex(r => r.date === date);
-
-        if (existingIndex !== -1) {
-            // 如果存在，更新体重
-            myRecords[existingIndex].weight = weight;
-        } else {
-            // 如果不存在，添加新记录
-            myRecords.push({ date, weight });
-        }
-
-        // 重新按日期排序（以防用户补录之前的日期）
+        if(!date || isNaN(weight)) return alert('请输入有效数值');
+        const idx = myRecords.findIndex(r => r.date === date);
+        if (idx !== -1) myRecords[idx].weight = weight;
+        else myRecords.push({ date, weight });
         myRecords.sort((a,b) => new Date(a.date) - new Date(b.date));
-        
         localStorage.setItem('fei_weight_logs', JSON.stringify(myRecords));
-        document.getElementById('newWeight').value = '';
         init();
+    }
+
+    function saveImage() {
+        const area = document.getElementById('capture-area');
+        html2canvas(area, { 
+            scale: 2, 
+            backgroundColor: '#e0e7ff',
+            borderRadius: 24 
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `FeiScale-Progress-${new Date().toISOString().slice(0,10)}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        });
     }
 
     init();
