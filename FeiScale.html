@@ -26,7 +26,7 @@
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 25px; }
         .stat-card { background: white; padding: 12px; border-radius: 16px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
         .stat-label { font-size: 0.7rem; color: #64748b; margin-bottom: 4px; text-transform: uppercase; }
-        .stat-value { font-weight: 800; font-size: 1.2rem; color: var(--primary); }
+        .stat-value { font-weight: 800; font-size: 1.1rem; color: var(--primary); }
         
         .input-area { margin-top: 25px; display: flex; gap: 10px; flex-wrap: wrap; }
         input { 
@@ -80,7 +80,7 @@
         { date: '2026-02-03', weight: 73.50 }, { date: '2026-02-04', weight: 73.80 },
         { date: '2026-02-05', weight: 73.80 }, { date: '2026-02-08', weight: 73.00 },
         { date: '2026-02-09', weight: 73.20 }, { date: '2026-02-10', weight: 72.30 },
-        { date: '2026-02-11', weight: 72.80 }
+        { date: '2026-02-11', weight: 72.85 }
     ];
 
     let myRecords = JSON.parse(localStorage.getItem('fei_weight_logs')) || historyData;
@@ -118,14 +118,39 @@
                         yAxisID: 'y',
                         tension: 0.4,
                         fill: true
+                    },
+                    {
+                        label: 'BMI',
+                        data: myRecords.map(r => calcBMI(r.weight)),
+                        borderColor: '#10b981',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        yAxisID: 'y1', // 使用右侧坐标轴
+                        tension: 0.4,
+                        fill: false
                     }
                 ]
             },
             options: {
                 responsive: true,
+                interaction: { mode: 'index', intersect: false },
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: { type: 'linear', display: true, position: 'left', grid: { color: '#f1f5f9' } },
+                    y: { 
+                        type: 'linear', 
+                        display: true, 
+                        position: 'left', 
+                        grid: { color: '#f1f5f9' },
+                        title: { display: true, text: 'kg', color: '#6366f1' }
+                    },
+                    y1: { 
+                        type: 'linear', 
+                        display: true, 
+                        position: 'right', 
+                        grid: { drawOnChartArea: false },
+                        title: { display: true, text: 'BMI', color: '#10b981' }
+                    },
                     x: { grid: { display: false } }
                 }
             }
